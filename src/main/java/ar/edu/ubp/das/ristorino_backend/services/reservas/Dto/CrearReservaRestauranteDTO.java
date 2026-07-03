@@ -4,7 +4,6 @@ public class CrearReservaRestauranteDTO {
 
   private Integer nroCliente;
   private String fechaReserva;
-  private Integer nroRestaurante;
   private Integer nroSucursal;
   private String codZona;
   private String horaReserva;
@@ -29,14 +28,6 @@ public class CrearReservaRestauranteDTO {
 
   public void setFechaReserva(String fechaReserva) {
     this.fechaReserva = fechaReserva;
-  }
-
-  public Integer getNroRestaurante() {
-    return nroRestaurante;
-  }
-
-  public void setNroRestaurante(Integer nroRestaurante) {
-    this.nroRestaurante = nroRestaurante;
   }
 
   public Integer getNroSucursal() {

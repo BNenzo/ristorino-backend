@@ -1,8 +1,6 @@
 package ar.edu.ubp.das.ristorino_backend.services.reservas;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,19 +9,16 @@ import org.springframework.transaction.annotation.Transactional;
 import com.google.gson.reflect.TypeToken;
 
 import ar.edu.ubp.das.ristorino_backend.beans.ClienteBean;
-import ar.edu.ubp.das.ristorino_backend.beans.ContenidoNoPublicadoBean;
 import ar.edu.ubp.das.ristorino_backend.components.ApiHandler.ApiHandler;
 import ar.edu.ubp.das.ristorino_backend.config.beans.ConfigBean;
 import ar.edu.ubp.das.ristorino_backend.repositories.clientes.ClienteRepository;
 import ar.edu.ubp.das.ristorino_backend.repositories.configuracion.ConfiguracionRepository;
 import ar.edu.ubp.das.ristorino_backend.repositories.costos.CostosRepository;
 import ar.edu.ubp.das.ristorino_backend.repositories.reservas.ReservasRepository;
-import ar.edu.ubp.das.ristorino_backend.repositories.reservas.beans.ObtenerDisponibilidadTurnosResponseBean;
 import ar.edu.ubp.das.ristorino_backend.resources.reservas.beans.CrearReservaRequestBean;
 import ar.edu.ubp.das.ristorino_backend.services.reservas.Dto.ClienteRestauranteDTO;
 import ar.edu.ubp.das.ristorino_backend.services.reservas.Dto.CrearReservaConClienteDTO;
 import ar.edu.ubp.das.ristorino_backend.services.reservas.Dto.CrearReservaRestauranteDTO;
-import ar.edu.ubp.das.ristorino_backend.utils.GeneradorCodigoReserva;
 
 @Service
 public class ReservasService {
@@ -57,7 +52,6 @@ public class ReservasService {
     CrearReservaRestauranteDTO reservaDTO = new CrearReservaRestauranteDTO();
     reservaDTO.setNroCliente(nroCliente);
     reservaDTO.setFechaReserva(request.getFechaReserva().toString());
-    reservaDTO.setNroRestaurante(1);
     reservaDTO.setNroSucursal(request.getNroSucursal());
     reservaDTO.setCodZona(request.getCodZona());
     reservaDTO.setHoraReserva(request.getHoraReserva().toString());
@@ -82,7 +76,7 @@ public class ReservasService {
     }.getType());
 
     if (codReservaSucursal == null)
-      return ""; // Deuda recalcular horarios
+      return "";
 
     // Insertamos en ristorino
     reservasRepository.crearReservaRestaurante(

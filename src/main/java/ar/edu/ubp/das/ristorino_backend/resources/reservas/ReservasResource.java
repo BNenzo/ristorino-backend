@@ -46,15 +46,6 @@ public class ReservasResource {
   private ConfiguracionRepository configuracionRepository;
 
   // GET DISPONIBILIDAD DE TURNOS (POR NRO_RESTAURANTE, SUCURSAL Y FECHA)
-  @GetMapping("/reservas/disponibilidad")
-  public List<ObtenerDisponibilidadTurnosBean> obtenerDisponibilidadDeTurnos(
-      @RequestParam Integer nroRestaurante,
-      @RequestParam Integer nroSucursal,
-      @RequestParam LocalDate fechaAReservar) {
-
-    return reservasRepository.obtenerDisponibilidadDeTurnos(nroRestaurante, nroSucursal, fechaAReservar);
-  }
-
   @GetMapping("/reservas/disponibilidad-v2")
   public List<ObtenerDisponibilidadTurnosResponseBean> obtenerDisponibilidadDeTurnosV2(
       @RequestParam Integer nroRestaurante,
@@ -73,10 +64,13 @@ public class ReservasResource {
         }.getType());
   }
 
+  // 1) craer la reserva en el restaurante -> ApiHandler
+  // 2) crear la reserva en ristorino -> repository
+  // 3) retornar codigo de reserva.
   // =====================================
   // REALIZAR UNA RESERVA EN UNA SUCURSAL
   // =====================================
-  @PostMapping("/reservas")
+  @PostMapping("/reservas/crear-reserva")
   public ResponseEntity<String> crearReserva(
       @RequestHeader(value = "nroCliente") Integer nroCliente,
       @RequestBody CrearReservaRequestBean request) {
@@ -116,6 +110,10 @@ public class ReservasResource {
     return reservasRepository.obtenerSucursalesFormReservas();
   }
 
+  /*
+   * OBTENER LAS ZONAS DISPONIBLES DE UNA SUCURSAL DE UN RESTAURANTE PARA
+   * INICIALIZAR EL FORM DE RESERVA
+   */
   @GetMapping("/reservas/obtener-zonas-sucursales-restaurantes")
   public List<ObtenerZonasSucursalesRestaurantesFormReservasResponseBean> obtenerZonasDeSucursalesRestaurantesFormReservas(
       @RequestHeader(value = "nroIdioma", required = false) Integer nroIdioma) {

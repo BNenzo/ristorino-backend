@@ -20,7 +20,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import ar.edu.ubp.das.ristorino_backend.beans.ContenidoNoPublicadoBean;
-import ar.edu.ubp.das.ristorino_backend.beans.PromocionContenidoBean;
 import ar.edu.ubp.das.ristorino_backend.beans.RestauranteIdBean;
 import ar.edu.ubp.das.ristorino_backend.beans.contenidos.ActualizarContenidosNoPublicadosDTO;
 import ar.edu.ubp.das.ristorino_backend.beans.contenidos.BuscadoPromocionesIAOutput;
@@ -62,6 +61,34 @@ public class ContenidosService {
   public ContenidosService() {
   }
 
+  /*
+   * METODO ORQUESTADOR PARA OBTENER TODOS LOS CONTENIDOS NO PUBLICADOS,
+   * GUARDARLOS EN DB Y
+   * SOLICITAR ACTUALIZACION DE LOS RESTAURANTES
+   */
+  public void sincronizarContenidosNoPublicados() {
+
+    List<ContenidoNoPublicadoBean> contenidos = this.obtenerTodosLosContenidosNoPublicados();
+
+    if (contenidos == null || contenidos.isEmpty()) {
+      return;
+    }
+
+    // Obtener costo dinámico UNA sola vez
+    BigDecimal costoContenido = costosRepository
+        .obtenerCostoPorTipo("CONTENIDO")
+        .getMonto();
+
+    for (ContenidoNoPublicadoBean c : contenidos) {
+
+      c.setCostoClick(costoContenido);
+
+      contenidosRepository.insertarContenidoNoPublicado(c);
+    }
+
+    this.actualizarContenidoNoPublicadosAPublicados(contenidos);
+  }
+
   public List<ContenidoNoPublicadoBean> obtenerTodosLosContenidosNoPublicados() {
 
     List<ContenidoNoPublicadoBean> resultado = new ArrayList<>();
@@ -78,8 +105,8 @@ public class ContenidosService {
       ConfigBean config = configuracionRepository.obtenerConfiguracionRestaunte(nroRestaurante);
 
       List<ContenidoNoPublicadoBean> contenidosPorRestaurante;
-      // 4) Decidir backend
 
+      // 4) Decidir backend
       contenidosPorRestaurante = new ApiHandler(config,
           "ObtenerContenidosNoPublicados")
           .execute(new TypeToken<List<ContenidoNoPublicadoBean>>() {
@@ -101,28 +128,51 @@ public class ContenidosService {
     return resultado;
   }
 
-  public void sincronizarContenidosNoPublicados() {
+  // ACTUALIZAR LOS CONTENIDOS NO PUBLICADOS A PUBLICADOS
+  public void actualizarContenidoNoPublicadosAPublicados(List<ContenidoNoPublicadoBean> contenidos) {
 
-    List<ContenidoNoPublicadoBean> contenidos = obtenerTodosLosContenidosNoPublicados();
-
-    // Obtener costo dinámico UNA sola vez
-    BigDecimal costoContenido = costosRepository
-        .obtenerCostoPorTipo("CONTENIDO")
-        .getMonto();
-
-    for (ContenidoNoPublicadoBean c : contenidos) {
-
-      c.setCostoClick(costoContenido);
-
-      contenidosRepository.insertarContenidoNoPublicado(c);
+    if (contenidos == null || contenidos.isEmpty()) {
+      return;
     }
 
-    this.actualizarContenidoNoPublicadosAPublicados(contenidos);
+    // 1) Agrupamos todos los contenidos por nroRestaurante, para poder recorrer
+    // esto en un array y mandar todos los contenidos a actualizar en la misma
+    // request
+    Map<Integer, List<ContenidoNoPublicadoBean>> contenidosPorRestaurante = contenidos.stream()
+        .collect(Collectors.groupingBy(ContenidoNoPublicadoBean::getNroRestaurante));
+
+    // 2) Recorremos los lotes de restaurantes - contenido.
+    for (Map.Entry<Integer, List<ContenidoNoPublicadoBean>> entry : contenidosPorRestaurante.entrySet()) {
+
+      Integer nroRestaurante = entry.getKey();
+      List<ContenidoNoPublicadoBean> listaContenidos = entry.getValue();
+
+      ConfigBean config = configuracionRepository.obtenerConfiguracionRestaunte(nroRestaurante);
+
+      // 3) cargamos la lista de contenidos en un nuevo dto para poder enviarlo en el
+      // body de la request
+
+      // otra forma de hacerlo:
+      // JsonObject body = new JsonObject();
+      // body.add("contenidos", GSON.toJsonTree(listaContenidos));
+
+      ActualizarContenidosNoPublicadosDTO actualizarContenidosNoPublicadosBody = new ActualizarContenidosNoPublicadosDTO();
+      actualizarContenidosNoPublicadosBody.setContenidos(listaContenidos);
+
+      new ApiHandler(config,
+          "ActualizarContenidoNoPublicadoAPublicados")
+          .execute(actualizarContenidosNoPublicadosBody);
+    }
   }
 
   public List<ObtenerContenidosSinContenidosIABean> generarContenidosIA()
       throws JsonProcessingException {
     List<ObtenerContenidosSinContenidosIABean> promociones = contenidosRepository.obtenerContenidosSinContenidosIA();
+
+    if (promociones.size() == 0) {
+      return null;
+    }
+
     List<IdiomasResponseBean> idiomas = idiomasRepository.obtenerIdiomas();
 
     int chunkSize = 3;
@@ -157,33 +207,6 @@ public class ContenidosService {
     }
 
     return resultAll;
-  }
-
-  // ACTUALIZAR LOS CONTENIDOS NO PUBLICADOS A PUBLICADOS
-  public void actualizarContenidoNoPublicadosAPublicados(List<ContenidoNoPublicadoBean> contenidos) {
-    // 1) Agrupamos todos los contenidos por nroRestaurante, para poder recorrer
-    // esto en un array y mandar todos los contenidos a actualizar en la misma
-    // request
-    Map<Integer, List<ContenidoNoPublicadoBean>> contenidosPorRestaurante = contenidos.stream()
-        .collect(Collectors.groupingBy(ContenidoNoPublicadoBean::getNroRestaurante));
-
-    // 2) Recorremos los lotes de restaurantes - contenido.
-    for (Map.Entry<Integer, List<ContenidoNoPublicadoBean>> entry : contenidosPorRestaurante.entrySet()) {
-
-      Integer nroRestaurante = entry.getKey();
-      List<ContenidoNoPublicadoBean> listaContenidos = entry.getValue();
-
-      ConfigBean config = configuracionRepository.obtenerConfiguracionRestaunte(nroRestaurante);
-
-      // 3) cargamos la lista de contenidos en un nuevo dto para poder enviarlo en el
-      // body de la request
-      ActualizarContenidosNoPublicadosDTO actualizarContenidosNoPublicadosBody = new ActualizarContenidosNoPublicadosDTO();
-      actualizarContenidosNoPublicadosBody.setContenidos(listaContenidos);
-
-      new ApiHandler(config,
-          "ActualizarContenidoNoPublicadoAPublicados")
-          .execute(actualizarContenidosNoPublicadosBody);
-    }
   }
 
   public List<BuscarContenidosIAResponseBean> buscarContenidosConIA(BuscarPromocionesIARequestBean search,

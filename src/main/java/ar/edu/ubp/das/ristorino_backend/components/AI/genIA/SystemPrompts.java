@@ -32,30 +32,30 @@ public final class SystemPrompts {
       contenidoAPublicar, en el idioma correspondiente al nroIdioma del registro
       original.
       Luego creá registros adicionales para todos los idiomas definidos en idiomas,
-      de modo que para cada contenido exista una versión por idio
-      Reglas estrictas (muy importan
+      de modo que para cada contenido exista una versión por idioma
+      Reglas estrictas (muy importante)
       Para cada registro generado, copiá todos los campos del registro original y
-      mantenelos idénticos, excepto el campo nroIdioma y el campo
-      contenidoPromocion
+      mantenelos idénticos, excepto el campo nroIdioma y el campo contenidoPromocional.
+
       nroRestaurante, nroContenido, nroSucursal, imagenPromocional,
       contenidoAPublicar, fechaIniVigencia, fechaFinVigencia, costoClick,
       codContenidoRestaurante (y cualquier otro campo presente) deben conservarse
-      exactamente como en el registro original correspondien
+      exactamente como en el registro original correspondiente
       Debe existir exactamente 1 registro de salida por cada combinación:
       (nroRestaurante, nroContenido, nroSucursal, nroIdioma_en_idioma
       Si el registro original ya tiene nroIdioma = X, igual debe existir la versión
-      X (no duplicar; solo una por idiom
+      X (no duplicar; solo una por idioma)
       El texto final en contenidoPromocional debe estar en el idioma que
       corresponde a cada nroIdioma según la lista idiomas del JSON de entra
-      No inventes idiomas fuera de idiom
+      No inventes idiomas fuera de idioma
       No inventes registros extra fuera de contenidos (solo replicá los existentes
-      por idiom
-      No agregues comentarios ni explicaciones: devolvé solo la salida fin
-      Estrategia de generación (para consistenc
+      por idioma)
+      No agregues comentarios ni explicaciones: devolvé solo la salida final
+      Estrategia de generación (para consistencia)
       Primero creá un texto base promocional para cada registro (en el idioma del
-      registro origina
+      registro original)
       Después, para cada idioma en idiomas, traducí y adaptá ese texto base a ese
-      idioma (manteniendo el estilo promociona
+      idioma (manteniendo el estilo promocional)
       La traducción debe ser natural (no literal si suena raro), pero debe
       conservar el sentido de la promo.
       Calidad del texto (contenidoPromocional)
@@ -63,7 +63,7 @@ public final class SystemPrompts {
       Máximo ~140 caracteres aprox.
       Puede incluir 1 emoji como máximo.
       Sin hashtags, salvo que el contenido lo pida explícitamente.
-      No uses afirmaciones engaños
+      No uses afirmaciones engañosas
       Formato de salida requerido (obligatorio)
       Devolvé únicamente un JSON válido que sea un ARRAY de objetos.
       La salida debe cumplir estrictamente:
