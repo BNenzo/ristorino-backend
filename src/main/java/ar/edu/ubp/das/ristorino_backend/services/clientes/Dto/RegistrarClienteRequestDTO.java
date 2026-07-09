@@ -1,5 +1,7 @@
 package ar.edu.ubp.das.ristorino_backend.services.clientes.Dto;
 
+import java.util.List;
+
 public class RegistrarClienteRequestDTO {
 
   private String correo;
@@ -9,7 +11,7 @@ public class RegistrarClienteRequestDTO {
   private String telefono;
   private Integer nroLocalidad;
   private String password;
-  private Integer[] preferencias;
+  private List<PreferenciaSeleccionadaDTO> preferencias;
 
   public RegistrarClienteRequestDTO() {
   }
@@ -70,11 +72,11 @@ public class RegistrarClienteRequestDTO {
     this.password = password;
   }
 
-  public Integer[] getPreferencias() {
+  public List<PreferenciaSeleccionadaDTO> getPreferencias() {
     return preferencias;
   }
 
-  public void setPreferencias(Integer[] preferencias) {
+  public void setPreferencias(List<PreferenciaSeleccionadaDTO> preferencias) {
     this.preferencias = preferencias;
   }
 }

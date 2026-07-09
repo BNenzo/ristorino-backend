@@ -1,6 +1,5 @@
 package ar.edu.ubp.das.ristorino_backend.services.clientes;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,9 +21,9 @@ public class ClientesService {
   @Transactional
   public Integer registrarClienteConPreferencias(RegistrarClienteRequestDTO request) {
 
-    // Convertir preferencias [1,2,3] → "1,2,3"
-    String preferenciasCsv = Arrays.stream(request.getPreferencias())
-        .map(String::valueOf)
+    // Convertir preferencias [{cod_categoria, nro_valor_dominio}] → "tc:1,ea:2,est:5"
+    String preferenciasCsv = request.getPreferencias().stream()
+        .map(p -> p.getCod_categoria() + ":" + p.getNro_valor_dominio())
         .collect(Collectors.joining(","));
 
     // Hashear password

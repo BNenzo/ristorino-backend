@@ -1809,7 +1809,7 @@ CREATE OR ALTER PROCEDURE dbo.sp_registrar_cliente
  @correo              VARCHAR(150),
  @telefonos           VARCHAR(50),
  @nro_localidad       INT,
- @preferencias        VARCHAR(200)
+ @preferencias        VARCHAR(1000)  -- pares "cod_categoria:nro_valor_dominio" separados por coma, ej: "tc:1,ea:2,est:5"
 AS
 BEGIN
  SET NOCOUNT ON;
@@ -1868,8 +1868,8 @@ BEGIN
      )
      SELECT
        @nro_cliente,
-       'tc',
-       CAST(value AS INT),
+       LEFT(value, CHARINDEX(':', value) - 1),
+       CAST(SUBSTRING(value, CHARINDEX(':', value) + 1, LEN(value)) AS INT),
        NULL
      FROM STRING_SPLIT(@preferencias, ',');
    END
@@ -1929,7 +1929,6 @@ BEGIN
        nro_valor_dominio,
        nom_valor_dominio
    FROM dominio_categorias_preferencias
-   WHERE cod_categoria = 'tc'
    ORDER BY nom_valor_dominio;
 END;
 GO
@@ -2086,6 +2085,44 @@ BEGIN
   ORDER BY d.nro_restaurante, d.nro_sucursal;
 END
 GO
+
+
+IF OBJECT_ID('dbo.sp_get_preferencias_cliente_tags_flat', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_get_preferencias_cliente_tags_flat;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_get_preferencias_cliente_tags_flat
+  @nro_cliente INT,
+  @nro_idioma  INT = 1
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  ;WITH pref AS (
+    SELECT
+      idcp.valor_dominio
+    FROM dbo.preferencias_clientes pc
+    INNER JOIN dbo.idiomas_dominio_cat_preferencias idcp
+      ON idcp.cod_categoria     = pc.cod_categoria
+     AND idcp.nro_valor_dominio = pc.nro_valor_dominio
+     AND idcp.nro_idioma        = @nro_idioma
+    WHERE pc.nro_cliente = @nro_cliente
+  ),
+  dedup AS (
+    SELECT DISTINCT
+      LTRIM(RTRIM(valor_dominio)) AS tag
+    FROM pref
+    WHERE valor_dominio IS NOT NULL
+      AND LTRIM(RTRIM(valor_dominio)) <> ''
+  )
+  SELECT
+    STRING_AGG(tag, '|') WITHIN GROUP (ORDER BY tag) AS tags
+  FROM dedup;
+END
+GO
+
+-- Ejemplo de uso:
+-- EXEC dbo.sp_get_preferencias_cliente_tags_flat @nro_cliente = 1, @nro_idioma = 1;
 
 
 CREATE OR ALTER PROCEDURE dbo.sp_get_promociones_por_lista
@@ -2303,3 +2340,4 @@ GO
 select * from contenidos_restaurantes
 
 select * from clicks_contenidos_restaurantes
+

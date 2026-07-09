@@ -210,7 +210,7 @@ public class ContenidosService {
   }
 
   public List<BuscarContenidosIAResponseBean> buscarContenidosConIA(BuscarPromocionesIARequestBean search,
-      Integer nroIdioma)
+      Integer nroIdioma, Integer nroCliente)
       throws JsonProcessingException {
 
     List<ObtenerContenidosResponseBean> promociones = contenidosRepository.getPromociones(null, nroIdioma);
@@ -229,6 +229,11 @@ public class ContenidosService {
     input.put("search", search.getSearch());
     input.put("promociones", promosDTO);
     input.put("restaurantes", preferenciasRestaurantesSucursales);
+
+    if (nroCliente != null) {
+      String preferenciasCliente = preferenciaRepository.obtenerPreferenciasClienteTags(nroCliente, nroIdioma);
+      input.put("preferenciasCliente", preferenciasCliente);
+    }
 
     String inputString = new Gson().toJson(input);
     String text = genAI.generate(inputString, SystemPrompts.PROMO_SEARCH);

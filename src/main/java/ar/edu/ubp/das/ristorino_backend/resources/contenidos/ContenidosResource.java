@@ -69,9 +69,10 @@ public class ContenidosResource {
   @PostMapping("/contenidos/busqueda")
   public ResponseEntity<List<BuscarContenidosIAResponseBean>> buscarContenidosIA(
       @RequestBody BuscarPromocionesIARequestBean request,
-      @RequestHeader(value = "nroIdioma", required = false) Integer nroIdioma)
+      @RequestHeader(value = "nroIdioma", required = false) Integer nroIdioma,
+      @RequestHeader(value = "nroCliente", required = false) Integer nroCliente)
       throws JsonProcessingException {
-    return ResponseEntity.ok(contenidosService.buscarContenidosConIA(request, nroIdioma));
+    return ResponseEntity.ok(contenidosService.buscarContenidosConIA(request, nroIdioma, nroCliente));
   }
 
   /*

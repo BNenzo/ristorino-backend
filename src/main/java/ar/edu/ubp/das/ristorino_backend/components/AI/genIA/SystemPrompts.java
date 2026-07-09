@@ -86,6 +86,7 @@ public final class SystemPrompts {
       El usuario indica qué desea comer o qué tipo de lugar busca.
       Tenés una lista de promociones disponibles.
       Además tenés características (tags) por restaurante/sucursal.
+      Opcionalmente, también tenés las preferencias gastronómicas del cliente que hace la búsqueda.
 
       OBJETIVO:
       Devolver IDs de promociones (no de restaurantes) que mejor coincidan con el pedido.
@@ -109,6 +110,19 @@ public final class SystemPrompts {
         - "barato", "económico" => tag: "Económico/Bajo"
         - "medio" => tag: "Medio"
 
+      Cómo usar "preferenciasCliente":
+      - Es un campo opcional del JSON de entrada (clave "preferenciasCliente").
+      - Si está ausente, es null o es un string vacío, ignoralo por completo y basate
+        solo en "search" y en los tags de RESTAURANTES.
+      - Si está presente, es un string con tags del mismo dominio que los de
+        RESTAURANTES (tipo de cocina, especialidad alimentaria, estilo, categoría de
+        precio), separados por "|".
+      - Usalo como señal adicional (no excluyente) para priorizar sucursales/promos
+        que coincidan con esos tags, sumado a lo que indique "search".
+      - Si "search" y "preferenciasCliente" entran en conflicto, priorizá lo que pida
+        explícitamente "search", y usá "preferenciasCliente" solo para desempatar o
+        ampliar resultados razonables.
+
       Reglas:
       - Respondé SOLO en JSON.
       - No uses ``` ni markdown.
@@ -129,6 +143,9 @@ public final class SystemPrompts {
 
       USUARIO:
       {"search":"Quiero comer en un lugar caro"}
+
+      PREFERENCIAS_CLIENTE (opcional, mismo formato de tags que RESTAURANTES):
+      {"preferenciasCliente":"Alto/Premium|Italiana|Vegetariana"}
 
       PROMOCIONES:
       [
