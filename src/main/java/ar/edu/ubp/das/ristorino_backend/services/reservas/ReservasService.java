@@ -3,8 +3,10 @@ package ar.edu.ubp.das.ristorino_backend.services.reservas;
 import java.math.BigDecimal;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.google.gson.reflect.TypeToken;
 
@@ -18,6 +20,7 @@ import ar.edu.ubp.das.ristorino_backend.repositories.reservas.ReservasRepository
 import ar.edu.ubp.das.ristorino_backend.resources.reservas.beans.CrearReservaRequestBean;
 import ar.edu.ubp.das.ristorino_backend.services.reservas.Dto.ClienteRestauranteDTO;
 import ar.edu.ubp.das.ristorino_backend.services.reservas.Dto.CrearReservaConClienteDTO;
+import ar.edu.ubp.das.ristorino_backend.services.reservas.Dto.CrearReservaDesdeRistorinoResponseDTO;
 import ar.edu.ubp.das.ristorino_backend.services.reservas.Dto.CrearReservaRestauranteDTO;
 
 @Service
@@ -32,7 +35,7 @@ public class ReservasService {
   private CostosRepository costosRepository;
 
   @Transactional
-  public String crearReserva(CrearReservaRequestBean request, Integer nroCliente) {
+  public CrearReservaDesdeRistorinoResponseDTO crearReserva(CrearReservaRequestBean request, Integer nroCliente) {
 
     // Obtener costo dinámico
     BigDecimal costoReserva = costosRepository
@@ -72,11 +75,15 @@ public class ReservasService {
     payload.setCliente(clienteDTO);
     payload.setReserva(reservaDTO);
 
-    String codReservaSucursal = new ApiHandler(config, "CrearReserva").execute(payload, new TypeToken<String>() {
-    }.getType());
+    CrearReservaDesdeRistorinoResponseDTO response = new ApiHandler(config, "CrearReserva").execute(payload,
+        new TypeToken<CrearReservaDesdeRistorinoResponseDTO>() {
+        }.getType());
 
-    if (codReservaSucursal == null)
-      return "";
+    if (response == null || response.getCodReservaSucursal() == null)
+      throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+          "No se pudo crear la reserva en el restaurante");
+
+    String codReservaSucursal = response.getCodReservaSucursal();
 
     // Insertamos en ristorino
     reservasRepository.crearReservaRestaurante(
@@ -92,6 +99,6 @@ public class ReservasService {
         costoReserva.doubleValue(),
         codReservaSucursal);
 
-    return codReservaSucursal;
+    return response;
   }
 }

@@ -13,12 +13,12 @@ import ar.edu.ubp.das.ristorino_backend.components.ApiHandler.ApiHandler;
 import ar.edu.ubp.das.ristorino_backend.config.beans.ConfigBean;
 import ar.edu.ubp.das.ristorino_backend.repositories.configuracion.ConfiguracionRepository;
 import ar.edu.ubp.das.ristorino_backend.repositories.reservas.ReservasRepository;
-import ar.edu.ubp.das.ristorino_backend.repositories.reservas.beans.ObtenerDisponibilidadTurnosBean;
 import ar.edu.ubp.das.ristorino_backend.repositories.reservas.beans.ObtenerDisponibilidadTurnosResponseBean;
 import ar.edu.ubp.das.ristorino_backend.resources.reservas.beans.CrearReservaRequestBean;
 import ar.edu.ubp.das.ristorino_backend.resources.reservas.beans.ObtenerReservaClienteBean;
 import ar.edu.ubp.das.ristorino_backend.resources.reservas.beans.ObtenerSucursalesFormReservasResponseBean;
 import ar.edu.ubp.das.ristorino_backend.services.reservas.ReservasService;
+import ar.edu.ubp.das.ristorino_backend.services.reservas.Dto.CrearReservaDesdeRistorinoResponseDTO;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -71,12 +71,12 @@ public class ReservasResource {
   // REALIZAR UNA RESERVA EN UNA SUCURSAL
   // =====================================
   @PostMapping("/reservas/crear-reserva")
-  public ResponseEntity<String> crearReserva(
+  public ResponseEntity<CrearReservaDesdeRistorinoResponseDTO> crearReserva(
       @RequestHeader(value = "nroCliente") Integer nroCliente,
       @RequestBody CrearReservaRequestBean request) {
 
-    String codigoReserva = reservasService.crearReserva(request, nroCliente);
-    return ResponseEntity.ok("\"" + codigoReserva + "\"");
+    CrearReservaDesdeRistorinoResponseDTO response = reservasService.crearReserva(request, nroCliente);
+    return ResponseEntity.ok(response);
   }
 
   // GET LAS RESERVAS DE UN CLIENTE
