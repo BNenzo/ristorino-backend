@@ -15,7 +15,7 @@ public class GenerarContenidoIAScheduler {
 
   @Scheduled(fixedRate = 15000)
   public void ejecutarGenerarContenidoIA() throws JsonProcessingException {
-    // contenidosService.generarContenidosIA(); DESCOMENTAR EN MOMENTOS CRUCIALES
+    // contenidosService.generarContenidosIA();
     System.out.println("Proceso de ejecutarGenerarContenidoIA ejecutado correctamente.");
 
   }
