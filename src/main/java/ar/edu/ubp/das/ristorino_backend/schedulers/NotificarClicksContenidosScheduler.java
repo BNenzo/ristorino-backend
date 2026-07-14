@@ -26,16 +26,26 @@ public class NotificarClicksContenidosScheduler {
   public void ejecutarNotificacionClicks() {
     try {
       // Se obtienen los clicks en las promociones no notificados
-      List<ClicksContenidosRestaurantesBean> clicksSinNotificar = clicksRepository
-          .obtenerClicksContenidosSinNotificar();
+      List<ClicksContenidosRestaurantesBean> clicksSinNotificar;
+      try {
+        clicksSinNotificar = clicksRepository.obtenerClicksContenidosSinNotificar();
+      } catch (Exception e) {
+        System.err.println("Error al obtener los clicks sin notificar: " + e.getMessage());
+        return;
+      }
 
       // Se recorren los clicks para enviar 1 a 1 al backend del restaurante
       for (ClicksContenidosRestaurantesBean clickSinNotificar : clicksSinNotificar) {
-        // Notificar click a restaurante
-        clicksService.registrarClickContenido(clickSinNotificar);
+        try {
+          // Notificar click a restaurante
+          clicksService.registrarClickContenido(clickSinNotificar);
 
-        // Actualizar "notificado" del click en ristorino
-        clicksRepository.actualizarClickSinNotificarANotificado(clickSinNotificar);
+          // Actualizar "notificado" del click en ristorino
+          clicksRepository.actualizarClickSinNotificarANotificado(clickSinNotificar);
+        } catch (Exception e) {
+          System.err.println("Error al notificar el click " + clickSinNotificar.getNroClick()
+              + " del restaurante " + clickSinNotificar.getNroRestaurante() + ": " + e.getMessage());
+        }
       }
 
       System.out.println("Proceso de notificación ejecutado correctamente.");

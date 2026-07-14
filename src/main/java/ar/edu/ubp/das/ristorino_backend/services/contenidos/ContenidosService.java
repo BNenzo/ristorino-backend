@@ -75,18 +75,33 @@ public class ContenidosService {
     }
 
     // Obtener costo dinámico UNA sola vez
-    BigDecimal costoContenido = costosRepository
-        .obtenerCostoPorTipo("CONTENIDO")
-        .getMonto();
+    BigDecimal costoContenido;
+    try {
+      costoContenido = costosRepository
+          .obtenerCostoPorTipo("CONTENIDO")
+          .getMonto();
+    } catch (Exception e) {
+      System.err.println("Error al obtener el costo dinámico de CONTENIDO, se aborta la sincronización: "
+          + e.getMessage());
+      return;
+    }
+
+    List<ContenidoNoPublicadoBean> contenidosInsertadosOk = new ArrayList<>();
 
     for (ContenidoNoPublicadoBean c : contenidos) {
 
       c.setCostoClick(costoContenido);
 
-      contenidosRepository.insertarContenidoNoPublicado(c);
+      try {
+        contenidosRepository.insertarContenidoNoPublicado(c);
+        contenidosInsertadosOk.add(c);
+      } catch (Exception e) {
+        System.err.println("Error al insertar contenido no publicado (nro_restaurante="
+            + c.getNroRestaurante() + ", nro_contenido=" + c.getNroContenido() + "): " + e.getMessage());
+      }
     }
 
-    this.actualizarContenidoNoPublicadosAPublicados(contenidos);
+    this.actualizarContenidoNoPublicadosAPublicados(contenidosInsertadosOk);
   }
 
   public List<ContenidoNoPublicadoBean> obtenerTodosLosContenidosNoPublicados() {
@@ -94,34 +109,45 @@ public class ContenidosService {
     List<ContenidoNoPublicadoBean> resultado = new ArrayList<>();
 
     // 1) Obtenemos restaurantes desde DB ristorino
-    List<RestauranteIdBean> restaurantes = contenidosRepository.getRestaurantesId();
+    List<RestauranteIdBean> restaurantes;
+    try {
+      restaurantes = contenidosRepository.getRestaurantesId();
+    } catch (Exception e) {
+      System.err.println("Error al obtener la lista de restaurantes: " + e.getMessage());
+      return resultado;
+    }
 
     // 2) Recorremos cada restaurante
     for (RestauranteIdBean r : restaurantes) {
 
       int nroRestaurante = r.getNro_restaurante();
 
-      // 3) Obtenemos la configuración
-      ConfigBean config = configuracionRepository.obtenerConfiguracionRestaunte(nroRestaurante);
+      try {
+        // 3) Obtenemos la configuración
+        ConfigBean config = configuracionRepository.obtenerConfiguracionRestaunte(nroRestaurante);
 
-      List<ContenidoNoPublicadoBean> contenidosPorRestaurante;
+        List<ContenidoNoPublicadoBean> contenidosPorRestaurante;
 
-      // 4) Decidir backend
-      contenidosPorRestaurante = new ApiHandler(config,
-          "ObtenerContenidosNoPublicados")
-          .execute(new TypeToken<List<ContenidoNoPublicadoBean>>() {
-          }.getType());
+        // 4) Decidir backend
+        contenidosPorRestaurante = new ApiHandler(config,
+            "ObtenerContenidosNoPublicados")
+            .execute(new TypeToken<List<ContenidoNoPublicadoBean>>() {
+            }.getType());
 
-      // 5) Normalizar y unificar resultados
-      if (contenidosPorRestaurante != null && !contenidosPorRestaurante.isEmpty()) {
+        // 5) Normalizar y unificar resultados
+        if (contenidosPorRestaurante != null && !contenidosPorRestaurante.isEmpty()) {
 
-        for (ContenidoNoPublicadoBean c : contenidosPorRestaurante) {
+          for (ContenidoNoPublicadoBean c : contenidosPorRestaurante) {
 
-          // 🔥 PISAMOS el nro_restaurante con el de ristorino
-          c.setNroRestaurante(nroRestaurante);
+            // 🔥 PISAMOS el nro_restaurante con el de ristorino
+            c.setNroRestaurante(nroRestaurante);
 
-          resultado.add(c);
+            resultado.add(c);
+          }
         }
+      } catch (Exception e) {
+        System.err.println("Error al obtener contenidos no publicados del restaurante "
+            + nroRestaurante + ": " + e.getMessage());
       }
     }
 
@@ -147,33 +173,50 @@ public class ContenidosService {
       Integer nroRestaurante = entry.getKey();
       List<ContenidoNoPublicadoBean> listaContenidos = entry.getValue();
 
-      ConfigBean config = configuracionRepository.obtenerConfiguracionRestaunte(nroRestaurante);
+      try {
+        ConfigBean config = configuracionRepository.obtenerConfiguracionRestaunte(nroRestaurante);
 
-      // 3) cargamos la lista de contenidos en un nuevo dto para poder enviarlo en el
-      // body de la request
+        // 3) cargamos la lista de contenidos en un nuevo dto para poder enviarlo en el
+        // body de la request
 
-      // otra forma de hacerlo:
-      // JsonObject body = new JsonObject();
-      // body.add("contenidos", GSON.toJsonTree(listaContenidos));
+        // otra forma de hacerlo:
+        // JsonObject body = new JsonObject();
+        // body.add("contenidos", GSON.toJsonTree(listaContenidos));
 
-      ActualizarContenidosNoPublicadosDTO actualizarContenidosNoPublicadosBody = new ActualizarContenidosNoPublicadosDTO();
-      actualizarContenidosNoPublicadosBody.setContenidos(listaContenidos);
+        ActualizarContenidosNoPublicadosDTO actualizarContenidosNoPublicadosBody = new ActualizarContenidosNoPublicadosDTO();
+        actualizarContenidosNoPublicadosBody.setContenidos(listaContenidos);
 
-      new ApiHandler(config,
-          "ActualizarContenidoNoPublicadoAPublicados")
-          .execute(actualizarContenidosNoPublicadosBody);
+        new ApiHandler(config,
+            "ActualizarContenidoNoPublicadoAPublicados")
+            .execute(actualizarContenidosNoPublicadosBody);
+      } catch (Exception e) {
+        System.err.println("Error al actualizar contenidos no publicados a publicados del restaurante "
+            + nroRestaurante + ": " + e.getMessage());
+      }
     }
   }
 
-  public List<ObtenerContenidosSinContenidosIABean> generarContenidosIA()
-      throws JsonProcessingException {
-    List<ObtenerContenidosSinContenidosIABean> promociones = contenidosRepository.obtenerContenidosSinContenidosIA();
+  public List<ObtenerContenidosSinContenidosIABean> generarContenidosIA() {
+
+    List<ObtenerContenidosSinContenidosIABean> promociones;
+    try {
+      promociones = contenidosRepository.obtenerContenidosSinContenidosIA();
+    } catch (Exception e) {
+      System.err.println("Error al obtener contenidos sin contenido IA: " + e.getMessage());
+      return null;
+    }
 
     if (promociones.size() == 0) {
       return null;
     }
 
-    List<IdiomasResponseBean> idiomas = idiomasRepository.obtenerIdiomas();
+    List<IdiomasResponseBean> idiomas;
+    try {
+      idiomas = idiomasRepository.obtenerIdiomas();
+    } catch (Exception e) {
+      System.err.println("Error al obtener idiomas, se aborta la generación de contenido IA: " + e.getMessage());
+      return null;
+    }
 
     int chunkSize = 3;
     List<ObtenerContenidosSinContenidosIABean> resultAll = new ArrayList<>();
@@ -182,28 +225,38 @@ public class ContenidosService {
       List<ObtenerContenidosSinContenidosIABean> chunk = promociones.subList(i,
           Math.min(i + chunkSize, promociones.size()));
 
-      ObjectMapper om = new ObjectMapper();
-      om.registerModule(new JavaTimeModule());
-      om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+      List<ObtenerContenidosSinContenidosIABean> list;
+      try {
+        ObjectMapper om = new ObjectMapper();
+        om.registerModule(new JavaTimeModule());
+        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-      Map<String, Object> input = new LinkedHashMap<>();
-      input.put("idiomas", idiomas);
-      input.put("contenidos", chunk);
+        Map<String, Object> input = new LinkedHashMap<>();
+        input.put("idiomas", idiomas);
+        input.put("contenidos", chunk);
 
-      String inputString = om.writeValueAsString(input);
+        String inputString = om.writeValueAsString(input);
 
-      String text = genAI.generate(inputString, SystemPrompts.RESTAURANTE_MULTILINGUE);
+        String text = genAI.generate(inputString, SystemPrompts.RESTAURANTE_MULTILINGUE);
 
-      List<ObtenerContenidosSinContenidosIABean> list = om.readValue(text,
-          new TypeReference<List<ObtenerContenidosSinContenidosIABean>>() {
-          });
-
-      for (ObtenerContenidosSinContenidosIABean item : list) {
-        contenidosRepository.insertarContenidoGeneradoConIA(item);
+        list = om.readValue(text,
+            new TypeReference<List<ObtenerContenidosSinContenidosIABean>>() {
+            });
+      } catch (Exception e) {
+        System.err.println("Error al generar contenido IA para el lote [" + i + ", "
+            + Math.min(i + chunkSize, promociones.size()) + "): " + e.getMessage());
+        continue;
       }
 
-      resultAll.addAll(list);
-
+      for (ObtenerContenidosSinContenidosIABean item : list) {
+        try {
+          contenidosRepository.insertarContenidoGeneradoConIA(item);
+          resultAll.add(item);
+        } catch (Exception e) {
+          System.err.println("Error al insertar contenido generado con IA (nro_restaurante="
+              + item.getNroRestaurante() + ", nro_contenido=" + item.getNroContenido() + "): " + e.getMessage());
+        }
+      }
     }
 
     return resultAll;

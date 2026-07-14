@@ -14,9 +14,12 @@ public class SincronizarContenidosNoPublicadosScheduler {
 
   @Scheduled(fixedRate = 20000)
   public void ejecutarSincronizacionDeContenidosNoPublicados() {
-    contenidosService.sincronizarContenidosNoPublicados();
-    System.out.println("Proceso de ejecutarSincronizacionDeContenidosNoPublicados ejecutado correctamente.");
-
+    try {
+      contenidosService.sincronizarContenidosNoPublicados();
+      System.out.println("Proceso de ejecutarSincronizacionDeContenidosNoPublicados ejecutado correctamente.");
+    } catch (Exception e) {
+      System.err.println("Error en ejecutarSincronizacionDeContenidosNoPublicados: " + e.getMessage());
+    }
   }
 
 }
