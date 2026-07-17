@@ -61,18 +61,18 @@ public class AuthResource {
       throw new RuntimeException("Usuario o contraseña inválidos");
     }
 
-    // 🕒 Fechas
+    // Fechas
     Instant now = Instant.now();
     Instant exp = now.plusSeconds(3600); // 1 hora
 
-    // 📦 Claims
+    // Claims
     JWTClaimsSet claims = new JWTClaimsSet.Builder()
         .subject(request.getEmail())
         .issueTime(Date.from(now))
         .expirationTime(Date.from(exp))
         .build();
 
-    // 🔑 Firma HS256
+    // Firma HS256
     SecretKeySpec key = new SecretKeySpec(
         jwtSecret.getBytes(StandardCharsets.UTF_8),
         "HmacSHA256");

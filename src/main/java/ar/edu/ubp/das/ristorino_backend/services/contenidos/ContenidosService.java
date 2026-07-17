@@ -139,7 +139,7 @@ public class ContenidosService {
 
           for (ContenidoNoPublicadoBean c : contenidosPorRestaurante) {
 
-            // 🔥 PISAMOS el nro_restaurante con el de ristorino
+            // PISAMOS el nro_restaurante con el de ristorino
             c.setNroRestaurante(nroRestaurante);
 
             resultado.add(c);
