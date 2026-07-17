@@ -10,29 +10,29 @@ public class PromocionContenidoBean {
   private int nroRestaurante;
   private String razonSocial;
   private String cuit;
-  private Integer nroSucursal; // NULL permitido
-  private String nomSucursal; // puede ser NULL por LEFT JOIN
-  private String calle; // puede ser NULL
-  private Integer nroCalle; // NULL permitido
-  private String barrio; // NULL permitido
-  private String nomLocalidad; // LEFT JOIN => puede ser NULL
-  private String nomProvincia; // LEFT JOIN => puede ser NULL
+  private Integer nroSucursal;
+  private String nomSucursal;
+  private String calle;
+  private Integer nroCalle;
+  private String barrio;
+  private String nomLocalidad;
+  private String nomProvincia;
 
   // Contenido
   private int nroContenido;
-  private int nroIdioma; // sin join a idiomas
+  private int nroIdioma;
   private String codContenidoRestaurante;
-  private String contenidoPromocional; // puede ser NULL
-  private String imagenPromocional; // puede ser NULL
-  private String contenidoAPublicar; // NOT NULL
+  private String contenidoPromocional;
+  private String imagenPromocional;
+  private String contenidoAPublicar;
   private LocalDate fechaIniVigencia;
   private LocalDate fechaFinVigencia;
   private BigDecimal costoClick;
 
   // Métricas de clics (con ISNULL en el SP)
-  private int totalClicks; // nunca NULL
-  private BigDecimal totalCostoClicks; // nunca NULL por ISNULL
-  private LocalDateTime ultimaInteraccion; // puede ser NULL
+  private int totalClicks;
+  private BigDecimal totalCostoClicks;
+  private LocalDateTime ultimaInteraccion;
 
   public int getNroRestaurante() {
     return nroRestaurante;
