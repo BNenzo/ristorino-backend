@@ -1340,7 +1340,7 @@ GO
 
 
 -- SELECT * from clicks_contenidos_restaurantes;
-
+-- MODIFICAR PARA RESTRINGIR RESTO
 CREATE OR ALTER PROCEDURE sp_get_restaurantes_id
 AS
 BEGIN

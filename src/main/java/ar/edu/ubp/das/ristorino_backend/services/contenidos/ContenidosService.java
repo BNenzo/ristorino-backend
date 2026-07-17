@@ -222,10 +222,10 @@ public class ContenidosService {
     List<ObtenerContenidosSinContenidosIABean> resultAll = new ArrayList<>();
 
     for (int i = 0; i < promociones.size(); i += chunkSize) {
-      List<ObtenerContenidosSinContenidosIABean> chunk = promociones.subList(i,
+      List<ObtenerContenidosSinContenidosIABean> loteAProcesar = promociones.subList(i,
           Math.min(i + chunkSize, promociones.size()));
 
-      List<ObtenerContenidosSinContenidosIABean> list;
+      List<ObtenerContenidosSinContenidosIABean> loteProcesado;
       try {
         ObjectMapper om = new ObjectMapper();
         om.registerModule(new JavaTimeModule());
@@ -233,13 +233,13 @@ public class ContenidosService {
 
         Map<String, Object> input = new LinkedHashMap<>();
         input.put("idiomas", idiomas);
-        input.put("contenidos", chunk);
+        input.put("contenidos", loteAProcesar);
 
         String inputString = om.writeValueAsString(input);
 
-        String text = genAI.generate(inputString, SystemPrompts.RESTAURANTE_MULTILINGUE);
+        String iaResponseContenidosGenerados = genAI.generate(inputString, SystemPrompts.RESTAURANTE_MULTILINGUE);
 
-        list = om.readValue(text,
+        loteProcesado = om.readValue(iaResponseContenidosGenerados,
             new TypeReference<List<ObtenerContenidosSinContenidosIABean>>() {
             });
       } catch (Exception e) {
@@ -248,7 +248,7 @@ public class ContenidosService {
         continue;
       }
 
-      for (ObtenerContenidosSinContenidosIABean item : list) {
+      for (ObtenerContenidosSinContenidosIABean item : loteProcesado) {
         try {
           contenidosRepository.insertarContenidoGeneradoConIA(item);
           resultAll.add(item);
